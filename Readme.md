@@ -7,7 +7,14 @@ must have the file
 wordlist.txt (for input words)
 wordlist-result.txt (for get the result to input the crouse)
 
-Step1:
-Input your words in this file.
-![image](https://github.com/bryht/MemriseToolkit/master/1.png)
+Step1:Input your words in this file.
+![image](https://github.com/bryht/MemriseToolkit/blob/master/1.png)
+
+Step2: Run the exe file and then you can get the content and audio.
+![image](https://github.com/bryht/MemriseToolkit/blob/master/2.png)
+![image](https://github.com/bryht/MemriseToolkit/blob/master/3.png)
+
+Step3: Import the content into the Memrise course with comma and then upload the audio one by one.
+![image](https://github.com/bryht/MemriseToolkit/blob/master/4.png)
+
 
