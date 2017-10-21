@@ -7,7 +7,7 @@ must have the file
 wordlist.txt (for input words)
 wordlist-result.txt (for get the result to input the crouse)
 
-Step1:Input your words in this file.
+Step1:Input your words in this file.(You can download the exe file from folder 'bin', but add the empty 'audio' folder, make them like the picture.)
 ![image](https://github.com/bryht/MemriseToolkit/blob/master/1.png)
 
 Step2: Run the exe file and then you can get the content and audio.
