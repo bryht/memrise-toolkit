@@ -4,21 +4,36 @@ import * as readline from 'readline';
 import * as https from 'https';
 import * as cheerio from 'cheerio';
 
-let worldArray = new Array();
-//Clear the word result file and folder
-fs.writeFile('wordlist-result.txt', '', () => { });
-fs.emptyDir('audio', err => { console.log(err) });
 
-//Get the word list
-let wordlistStream = fs.createReadStream('wordlist.txt');
-let wordlistReadLine = readline.createInterface(wordlistStream);
-wordlistReadLine.on('line', line => {
-    let wordResult = searchWord(line);
-    wordResult.then(define => {
-        console.log(define);
-        saveWord(line, define.toString());
+for (var index = 0; index < process.argv.length; index++) {
+    var element = process.argv[index];
+    if (element.includes('target')) {
+        let target = element.split('=')[1];
+        console.log(target);
+        main(target);
+    }
+}
+
+
+function main(target: string): number {
+
+    let worldArray = new Array();
+    //Clear the word result file and folder
+    fs.writeFile('wordlist-result.txt', '', () => { });
+    fs.emptyDir('audio', err => { console.log(err) });
+
+    //Get the word list
+    let wordlistStream = fs.createReadStream('wordlist.txt');
+    let wordlistReadLine = readline.createInterface(wordlistStream);
+    wordlistReadLine.on('line', line => {
+        let wordResult = searchWord(line);
+        wordResult.then(define => {
+            console.log(define);
+            saveWord(line, define.toString());
+        });
     });
-});
+    return 0;
+}
 
 
 //Check word from these websites.
@@ -43,11 +58,11 @@ function searchWord(input: string) {
                 let $body = cheerio.load(body.toString());
                 let pos = "[" + $body('.POS').first().text().trim() + "]";
                 let pron = "[" + $body('.PRON').first().text().trim() + "]";
-                let define = $body('#' + input + '__1 .DEF').text().replace(/,/g,'.');
+                let define = $body('#' + input + '__1 .DEF').text().replace(/,/g, '.');
                 let mp3Url = 'https://www.ldoceonline.com/' + $body('.brefile').first().attr('data-src-mp3');
                 saveMp3File(mp3Url, input);
-                resolve(pos + define +','+ pron);
-            
+                resolve(pos + define + ',' + pron);
+
             });
         });
 

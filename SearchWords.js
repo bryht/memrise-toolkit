@@ -4,24 +4,32 @@ const fs = require("fs-extra");
 const readline = require("readline");
 const https = require("https");
 const cheerio = require("cheerio");
-let worldArray = new Array();
-//Clear the word result file and folder
-fs.writeFile('wordlist-result.txt', '', () => { });
-fs.emptyDir('audio', err => { console.log(err); });
-//Get the word list
-let wordlistStream = fs.createReadStream('wordlist.txt');
-let wordlistReadLine = readline.createInterface(wordlistStream);
-wordlistReadLine.on('line', line => {
-    let wordResult = searchWord(line);
-    wordResult.then(define => {
-        console.log(define);
-        saveWord(line, define.toString());
+for (var index = 0; index < process.argv.length; index++) {
+    var element = process.argv[index];
+    if (element.includes('target')) {
+        let target = element.split('=')[1];
+        console.log(target);
+        main(target);
+    }
+}
+function main(target) {
+    let worldArray = new Array();
+    //Clear the word result file and folder
+    fs.writeFile('wordlist-result.txt', '', () => { });
+    fs.emptyDir('audio', err => { console.log(err); });
+    //Get the word list
+    let wordlistStream = fs.createReadStream('wordlist.txt');
+    let wordlistReadLine = readline.createInterface(wordlistStream);
+    wordlistReadLine.on('line', line => {
+        let wordResult = searchWord(line);
+        wordResult.then(define => {
+            console.log(define);
+            saveWord(line, define.toString());
+        });
     });
-});
+}
 //Check word from these websites.
-//http://www.oxfordlearnersdictionaries.com/search/english/direct/?q=sacrifice
 //http://www.ldoceonline.com/search/direct/?q=jersey
-//https://translate.google.com/?q=jersey
 function searchWord(input) {
     //get the define
     let content = new Promise((resolve, reject) => {
@@ -68,3 +76,4 @@ function saveWord(word, define) {
         console.log(word + ' Saved!');
     });
 }
+//# sourceMappingURL=SearchWords.js.map

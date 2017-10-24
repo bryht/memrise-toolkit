@@ -2,7 +2,7 @@
   "name": "memrise-toolkit",
   "version": "1.0.0",
   "description": "",
-  "main": "SearchWords.js",
+  "main": "SearchWords.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
