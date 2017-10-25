@@ -28,7 +28,7 @@ function main(target: string): number {
 
         searchWord(word)
             .then(resultWord => {
-                return translateWord(resultWord as WordDefine);
+                return translateWord(resultWord);
             })
             .then(resultWord => {
 
@@ -46,6 +46,7 @@ function main(target: string): number {
             });
 
     });
+
     return 0;
 }
 
