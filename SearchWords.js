@@ -20,37 +20,36 @@ function main(target) {
     //Get the word list
     let wordlistStream = fs.createReadStream('wordlist.txt');
     let wordlistReadLine = readline.createInterface(wordlistStream);
-    wordlistReadLine.on('line', line => {
-        let wordResult = searchWord(line);
-        let wordTranslate = translateWord(line);
-        wordResult.then(word => {
-            let searchWord = word;
-            wordTranslate.then(trans => {
-                console.log(searchWord.define + trans);
-                switch (target) {
-                    case 'myself':
-                        saveWord(line + "," + searchWord.pos + searchWord.define + trans + "," + searchWord.pron);
-                        break;
-                    case 'teacher':
-                        saveWord(line + ": " + searchWord.define);
-                        break;
-                    default:
-                        break;
-                }
-            });
+    wordlistReadLine.on('line', word => {
+        searchWord(word)
+            .then(resultWord => {
+            return translateWord(resultWord);
+        })
+            .then(resultWord => {
+            console.log(resultWord.define + resultWord.zh);
+            switch (target) {
+                case 'myself':
+                    saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "[" + resultWord.zh + "]" + "," + resultWord.pron);
+                    break;
+                case 'teacher':
+                    saveWord(resultWord.word + ": " + resultWord.define);
+                    break;
+                default:
+                    break;
+            }
         });
     });
     return 0;
 }
 //Check word from these websites.
 //http://www.ldoceonline.com/search/direct/?q=jersey
-function searchWord(input) {
+function searchWord(word) {
     //get the define
     let content = new Promise((resolve, reject) => {
         let options = {
             "method": "GET",
             "hostname": "www.ldoceonline.com",
-            "path": "/dictionary/" + input
+            "path": "/dictionary/" + word
         };
         let req = https.request(options, function (res) {
             let chunks = [];
@@ -62,11 +61,11 @@ function searchWord(input) {
                 let $body = cheerio.load(body.toString());
                 let pos = "[" + $body('.POS').first().text().trim() + "]";
                 let pron = "[" + $body('.PRON').first().text().trim() + "]";
-                let define = $body('#' + input + '__1 .DEF').text().replace(/,/g, '.');
+                let define = $body('#' + word + '__1 .DEF').text().replace(/,/g, '.');
                 let mp3Url = 'https://www.ldoceonline.com/' + $body('.brefile').first().attr('data-src-mp3');
-                saveMp3File(mp3Url, input);
-                let word = new WordDefine(pos, define, pron);
-                resolve(word);
+                saveMp3File(mp3Url, word);
+                let result = new WordDefine(word, pos, define, pron);
+                resolve(result);
             });
         });
         req.end();
@@ -78,7 +77,7 @@ function translateWord(input, target = 'zh') {
         var options = {
             "method": "POST",
             "hostname": "translation.googleapis.com",
-            "path": "/language/translate/v2?key=Kkkkkkkkkkkkkkkk&q=" + input + "&target=" + target
+            "path": "/language/translate/v2?key=Kkkkkkkkkkkkkkkk&q=" + input.word + "&target=" + target
         };
         var req = https.request(options, function (res) {
             var chunks = [];
@@ -88,7 +87,8 @@ function translateWord(input, target = 'zh') {
             res.on("end", function () {
                 var body = Buffer.concat(chunks);
                 let result = JSON.parse(body.toString());
-                resolve(result.data.translations[0].translatedText);
+                input.zh = result.data.translations[0].translatedText;
+                resolve(input);
             });
         });
         req.end();
@@ -114,7 +114,8 @@ function saveWord(line) {
     });
 }
 class WordDefine {
-    constructor(p, d, pron) {
+    constructor(word, p, d, pron) {
+        this.word = word;
         this.pos = p;
         this.define = d;
         this.pron = pron;

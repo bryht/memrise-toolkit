@@ -34,13 +34,11 @@ function main(target: string): number {
 
                 console.log(resultWord.define + resultWord.zh);
                 switch (target) {
-                    case 'myself':
-                        saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "[" + resultWord.zh + "]" + "," + resultWord.pron);
-                        break;
                     case 'teacher':
                         saveWord(resultWord.word + ": " + resultWord.define);
                         break;
                     default:
+                        saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "[" + resultWord.zh + "]" + "," + resultWord.pron);
                         break;
                 }
             });
