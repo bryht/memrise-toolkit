@@ -17,4 +17,7 @@ Step2: Run the exe file and then you can get the content and audio.
 Step3: Import the content into the Memrise course with comma and then upload the audio one by one.
 ![image](https://github.com/bryht/MemriseToolkit/blob/master/4.png)
 
+run this exe should be like:
+SearchWords.exe target=myself
+
 
