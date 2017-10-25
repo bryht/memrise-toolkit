@@ -22,11 +22,25 @@ function main(target) {
     let wordlistReadLine = readline.createInterface(wordlistStream);
     wordlistReadLine.on('line', line => {
         let wordResult = searchWord(line);
-        wordResult.then(define => {
-            console.log(define);
-            saveWord(line, define.toString());
+        let wordTranslate = translateWord(line);
+        wordResult.then(word => {
+            let searchWord = word;
+            wordTranslate.then(trans => {
+                console.log(searchWord.define + trans);
+                switch (target) {
+                    case 'myself':
+                        saveWord(line + "," + searchWord.pos + searchWord.define + trans + "," + searchWord.pron);
+                        break;
+                    case 'teacher':
+                        saveWord(line + ": " + searchWord.define);
+                        break;
+                    default:
+                        break;
+                }
+            });
         });
     });
+    return 0;
 }
 //Check word from these websites.
 //http://www.ldoceonline.com/search/direct/?q=jersey
@@ -51,7 +65,30 @@ function searchWord(input) {
                 let define = $body('#' + input + '__1 .DEF').text().replace(/,/g, '.');
                 let mp3Url = 'https://www.ldoceonline.com/' + $body('.brefile').first().attr('data-src-mp3');
                 saveMp3File(mp3Url, input);
-                resolve(pos + define + ',' + pron);
+                let word = new WordDefine(pos, define, pron);
+                resolve(word);
+            });
+        });
+        req.end();
+    });
+    return content;
+}
+function translateWord(input, target = 'zh') {
+    let content = new Promise((resolve, reject) => {
+        var options = {
+            "method": "POST",
+            "hostname": "translation.googleapis.com",
+            "path": "/language/translate/v2?key=Kkkkkkkkkkkkkkkk&q=" + input + "&target=" + target
+        };
+        var req = https.request(options, function (res) {
+            var chunks = [];
+            res.on("data", function (chunk) {
+                chunks.push(chunk);
+            });
+            res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                let result = JSON.parse(body.toString());
+                resolve(result.data.translations[0].translatedText);
             });
         });
         req.end();
@@ -67,13 +104,20 @@ function saveMp3File(url, fileName) {
         res.pipe(file);
     });
 }
-function saveWord(word, define) {
-    fs.appendFile('wordlist-result.txt', word + ',' + define + '\n', function (err) {
+function saveWord(line) {
+    fs.appendFile('wordlist-result.txt', line + '\n', function (err) {
         if (err) {
             console.log(err.message);
             throw err;
         }
-        console.log(word + ' Saved!');
+        console.log(line + ' Saved!');
     });
+}
+class WordDefine {
+    constructor(p, d, pron) {
+        this.pos = p;
+        this.define = d;
+        this.pron = pron;
+    }
 }
 //# sourceMappingURL=SearchWords.js.map

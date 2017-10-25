@@ -14,7 +14,7 @@
             ],
             "program": "${workspaceFolder}\\SearchWords.ts",
             "args": [
-                "target=myself"
+                "target=teacher"
             ]
         }
     ]
