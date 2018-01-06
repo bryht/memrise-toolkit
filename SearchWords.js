@@ -4,13 +4,18 @@ const fs = require("fs-extra");
 const readline = require("readline");
 const https = require("https");
 const cheerio = require("cheerio");
+let directFlag = false;
 for (var index = 0; index < process.argv.length; index++) {
     var element = process.argv[index];
     if (element.includes('target')) {
         let target = element.split('=')[1];
         console.log(target);
         main(target);
+        directFlag = true;
     }
+}
+if (directFlag == false) {
+    main('');
 }
 function main(target) {
     let worldArray = new Array();
@@ -28,13 +33,11 @@ function main(target) {
             .then(resultWord => {
             console.log(resultWord.define + resultWord.zh);
             switch (target) {
-                case 'myself':
-                    saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "[" + resultWord.zh + "]" + "," + resultWord.pron);
-                    break;
                 case 'teacher':
                     saveWord(resultWord.word + ": " + resultWord.define);
                     break;
                 default:
+                    saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "," + "[" + resultWord.zh + "]" + resultWord.pron + "," + resultWord.exp);
                     break;
             }
         });
@@ -60,11 +63,15 @@ function searchWord(word) {
                 let body = Buffer.concat(chunks);
                 let $body = cheerio.load(body.toString());
                 let pos = "[" + $body('.POS').first().text().trim() + "]";
-                let pron = "[" + $body('.PRON').first().text().trim() + "]";
+                let pron = "[" + $body('.PRON').first().text().replace(/,/g, '-').trim() + "]";
                 let define = $body('#' + word + '__1 .DEF').text().replace(/,/g, '.');
                 let mp3Url = 'https://www.ldoceonline.com/' + $body('.brefile').first().attr('data-src-mp3');
+                let exp = $body('#' + word + '__1 .EXAMPLE').first().text().replace(/,/g, '.').replace(word, '[xxx]').trim();
+                if (exp.length == 0) {
+                    exp = $body('.cexa1g1[info=UK]').first().text().replace(/,/g, '.').replace(word, '[xxx]').trim();
+                }
                 saveMp3File(mp3Url, word);
-                let result = new WordDefine(word, pos, define, pron);
+                let result = new WordDefine(word, pos, define, pron, exp);
                 resolve(result);
             });
         });
@@ -77,7 +84,7 @@ function translateWord(input, target = 'zh') {
         var options = {
             "method": "POST",
             "hostname": "translation.googleapis.com",
-            "path": "/language/translate/v2?key=Kkkkkkkkkkkkkkkk&q=" + input.word + "&target=" + target
+            "path": "/language/translate/v2?key=AIzaSyD5EXQV1KyxJLo09v05r5eWFGLfkvj2y_o&q=" + input.word + "&target=" + target
         };
         var req = https.request(options, function (res) {
             var chunks = [];
@@ -114,11 +121,12 @@ function saveWord(line) {
     });
 }
 class WordDefine {
-    constructor(word, p, d, pron) {
+    constructor(word, p, d, pron, exp = '') {
         this.word = word;
         this.pos = p;
         this.define = d;
         this.pron = pron;
+        this.exp = exp;
     }
 }
 //# sourceMappingURL=SearchWords.js.map

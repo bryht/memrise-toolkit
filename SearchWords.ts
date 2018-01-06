@@ -5,13 +5,18 @@ import * as https from 'https';
 import * as cheerio from 'cheerio';
 
 
+let directFlag: boolean = false;
 for (var index = 0; index < process.argv.length; index++) {
     var element = process.argv[index];
     if (element.includes('target')) {
         let target = element.split('=')[1];
         console.log(target);
         main(target);
+        directFlag = true;
     }
+}
+if (directFlag == false) {
+    main('');
 }
 
 
@@ -38,7 +43,7 @@ function main(target: string): number {
                         saveWord(resultWord.word + ": " + resultWord.define);
                         break;
                     default:
-                        saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "[" + resultWord.zh + "]" + "," + resultWord.pron);
+                        saveWord(resultWord.word + "," + resultWord.pos + resultWord.define + "," + "[" + resultWord.zh + "]" + resultWord.pron + "," + resultWord.exp);
                         break;
                 }
             });
@@ -70,11 +75,15 @@ function searchWord(word: string): Promise<WordDefine> {
                 let body = Buffer.concat(chunks);
                 let $body = cheerio.load(body.toString());
                 let pos = "[" + $body('.POS').first().text().trim() + "]";
-                let pron = "[" + $body('.PRON').first().text().trim() + "]";
+                let pron = "[" + $body('.PRON').first().text().replace(/,/g, '-').trim() + "]";
                 let define = $body('#' + word + '__1 .DEF').text().replace(/,/g, '.');
                 let mp3Url = 'https://www.ldoceonline.com/' + $body('.brefile').first().attr('data-src-mp3');
+                let exp = $body('#' + word + '__1 .EXAMPLE').first().text().replace(/,/g, '.').replace(word, '[xxx]').trim();
+                if (exp.length==0) {
+                    exp=$body('.cexa1g1[info=UK]').first().text().replace(/,/g, '.').replace(word,'[xxx]').trim();     
+                }
                 saveMp3File(mp3Url, word);
-                let result = new WordDefine(word, pos, define, pron);
+                let result = new WordDefine(word, pos, define, pron, exp);
                 resolve(result);
 
             });
@@ -93,7 +102,7 @@ function translateWord(input: WordDefine, target: string = 'zh'): Promise<WordDe
         var options = {
             "method": "POST",
             "hostname": "translation.googleapis.com",
-            "path": "/language/translate/v2?key=Kkkkkkkkkkkkkkkk&q=" + input.word + "&target=" + target
+            "path": "/language/translate/v2?key=AIzaSyD5EXQV1KyxJLo09v05r5eWFGLfkvj2y_o&q=" + input.word + "&target=" + target
         };
 
         var req = https.request(options, function (res) {
@@ -147,11 +156,13 @@ class WordDefine {
     define: string;
     pron: string;
     zh: string;
-    constructor(word: string, p: string, d: string, pron: string) {
+    exp: string;
+    constructor(word: string, p: string, d: string, pron: string, exp: string = '') {
         this.word = word;
         this.pos = p;
         this.define = d;
         this.pron = pron;
+        this.exp = exp;
     }
 }
 
